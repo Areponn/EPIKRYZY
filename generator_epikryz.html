@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Epikryz</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ec;
+    --surface: #ffffff;
+    --border: #d4cfc4;
+    --border-strong: #a09890;
+    --text: #1a1714;
+    --text-muted: #6b6560;
+    --accent: #3d6b8f;
+    --accent-light: #e8f0f7;
+    --red: #8f3d3d;
+    --green: #3d7a5a;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 280px;
+    min-height: 100vh;
+    background: #1a1714;
+    color: #f5f2ec;
+    padding: 32px 24px;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  .sidebar-header {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #a09890;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 8px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #333;
+  }
+
+  .sidebar-title {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-subtitle {
+    font-size: 13px;
+    color: #a09890;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 24px;
+  }
+
+  .nav-section {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #6b6560;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 16px;
+    margin-bottom: 4px;
+    padding-left: 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s;
+    color: #c8c2b8;
+  }
+  .nav-item:hover { background: #2a2724; color: #f5f2ec; }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+  .nav-item.active .nav-dot { opacity: 1; }
+
+  .sidebar-actions {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2d5a7f; }
+  .btn-secondary { background: #2a2724; color: #c8c2b8; border: 1px solid #444; }
+  .btn-secondary:hover { background: #333; color: #f5f2ec; }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid #8f3d3d55; }
+  .btn-danger:hover { background: #8f3d3d22; }
+
+  /* MAIN */
+  .main {
+    margin-left: 280px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .breadcrumb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .breadcrumb span { color: var(--text); }
+
+  .progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .progress-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .progress-track {
+    width: 120px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .section-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #faf9f7;
+  }
+
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--border);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .section-body {
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .field-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .field-full { grid-column: 1 / -1; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  input, select, textarea {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 16px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+    background: #fff;
+  }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  select { cursor: pointer; }
+
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-style: italic;
+  }
+
+  /* CHECKBOX GROUP */
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .checkbox-item:hover { border-color: var(--accent); }
+  .checkbox-item input[type=checkbox] { width: auto; padding: 0; }
+  .checkbox-item.checked { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+  /* WYNIK */
+  .preview-section {
+    background: #1a1714;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .preview-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .preview-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #a09890;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .preview-actions { display: flex; gap: 8px; }
+
+  .preview-body {
+    padding: 32px;
+    color: #f5f2ec;
+    font-size: 16px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    font-family: 'Crimson Pro', Georgia, serif;
+  }
+
+  .preview-body .placeholder {
+    color: #8f3d3d;
+    background: #8f3d3d22;
+    padding: 0 4px;
+    border-radius: 3px;
+    font-style: italic;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: #faf9f7;
+  }
+  .tab {
+    padding: 14px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--surface);
+  }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  /* BADGE */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--accent-light);
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  /* INLINE UNIT */
+  .field-with-unit {
+    display: flex;
+    gap: 0;
+  }
+  .field-with-unit input {
+    border-radius: 6px 0 0 6px;
+  }
+  .unit-label {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  @media print {
+    .sidebar, .topbar, .preview-section, .sidebar-actions { display: none; }
+    .main { margin-left: 0; }
+    .content { padding: 0; }
+    .section { box-shadow: none; border: none; }
+  }
+
+  /* ANIMATIONS */
+  .section { animation: fadeUp 0.3s ease both; }
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+  .section:nth-child(4) { animation-delay: 0.15s; }
+  .section:nth-child(5) { animation-delay: 0.2s; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">Pulmonologia / Klinika</div>
+  <div class="sidebar-title">Generator Epikryz</div>
+  <div class="sidebar-subtitle">v1.0 · 2025</div>
+
+  <div class="nav-section">Sekcje formularza</div>
+  <div class="nav-item active" onclick="scrollTo('s-dane')"><div class="nav-dot"></div> Dane pacjenta</div>
+  <div class="nav-item" onclick="scrollTo('s-przyjecie')"><div class="nav-dot"></div> Przyjęcie i wywiad</div>
+  <div class="nav-item" onclick="scrollTo('s-badania')"><div class="nav-dot"></div> Badania laboratoryj.</div>
+  <div class="nav-item" onclick="scrollTo('s-czynnosciowe')"><div class="nav-dot"></div> Badania czynnościowe</div>
+  <div class="nav-item" onclick="scrollTo('s-obrazowe')"><div class="nav-dot"></div> Badania obrazowe</div>
+  <div class="nav-item" onclick="scrollTo('s-procedury')"><div class="nav-dot"></div> Procedury</div>
+  <div class="nav-item" onclick="scrollTo('s-zalecenia')"><div class="nav-dot"></div> Zalecenia</div>
+
+  <div class="sidebar-actions">
+    <button class="btn btn-primary" onclick="generateEpikryza()">▶ Generuj epikryzę</button>
+    <button class="btn btn-secondary" onclick="copyText()">⊞ Kopiuj tekst</button>
+    <button class="btn btn-secondary" onclick="printDoc()">⎙ Drukuj</button>
+    <button class="btn btn-danger" onclick="resetForm()">↺ Wyczyść formularz</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="breadcrumb">Epikryzy / <span>Nowa epikryza</span></div>
+    <div class="progress-bar">
+      <div class="progress-label">Uzupełnienie:</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-label" id="progressPct">0%</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- 1. DANE PACJENTA -->
+    <div class="section" id="s-dane">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <span class="section-title">Dane pacjenta i hospitalizacji</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Wiek pacjenta</label>
+            <div class="field-with-unit">
+              <input type="number" id="wiek" placeholder="np. 78" min="0" max="130" oninput="updateProgress()">
+              <div class="unit-label">lat</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Płeć</label>
+            <select id="plec" onchange="updateProgress()">
+              <option value="">— wybierz —</option>
+              <option value="Pacjentka">Kobieta</option>
+              <option value="Pacjent">Mężczyzna</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Tryb przyjęcia</label>
+            <select id="tryb" onchange="updateProgress()">
+              <option value="">— wybierz —</option>
+              <option value="planowym">Planowy</option>
+              <option value="pilnym">Pilny</option>
+              <option value="nagłym">Nagły</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Cel przyjęcia</label>
+            <input type="text" id="cel" placeholder="np. diagnostyki choroby śródmiąższowej płuc" oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Data badania TK (pierwsze wykrycie)</label>
+            <input type="date" id="dataTK" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>Poradnia sprawująca opiekę</label>
+            <input type="text" id="poradnia" placeholder="np. Poradnia Pneumonologiczna w Żukowie" oninput="updateProgress()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. PRZYJĘCIE I WYWIAD -->
+    <div class="section" id="s-przyjecie">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <span class="section-title">Przyjęcie i wywiad</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Opis TK przy pierwszym wykryciu zmian</label>
+          <textarea id="opisTK" rows="4" placeholder="np. Rozproszone zmętnianie typu matowej szyby obejmujące pola płucne..." oninput="updateProgress()"></textarea>
+        </div>
+        <div class="field">
+          <label>Stan ogólny przy przyjęciu</label>
+          <select id="stanOgolny" onchange="updateProgress()">
+            <option value="">— wybierz —</option>
+            <option value="bardzo dobrym">Bardzo dobry</option>
+            <option value="dość dobrym">Dość dobry</option>
+            <option value="dobrym">Dobry</option>
+            <option value="średnim">Średni</option>
+            <option value="ciężkim">Ciężki</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Narażenia na alergeny (wywiad środowiskowy)</label>
+          <textarea id="alergeny" rows="3" placeholder="np. pościel z pierzem gęsim, azbest, kompost, spleśniałe siano, pleśń na ścianach" oninput="updateProgress()"></textarea>
+        </div>
+        <div class="field">
+          <label>Zgłaszane objawy</label>
+          <div class="checkbox-group" id="objawyCB">
+            <label class="checkbox-item" id="cb-dusznosc"><input type="checkbox" onchange="toggleCB(this, 'cb-dusznosc')"> Duszność wysiłkowa</label>
+            <label class="checkbox-item" id="cb-kaszel"><input type="checkbox" onchange="toggleCB(this, 'cb-kaszel')"> Kaszel produktywny</label>
+            <label class="checkbox-item" id="cb-bole"><input type="checkbox" onchange="toggleCB(this, 'cb-bole')"> Bóle stawowe</label>
+            <label class="checkbox-item" id="cb-suche"><input type="checkbox" onchange="toggleCB(this, 'cb-suche')"> Suchość oczu</label>
+            <label class="checkbox-item" id="cb-zawroty"><input type="checkbox" onchange="toggleCB(this, 'cb-zawroty')"> Zawroty głowy</label>
+            <label class="checkbox-item" id="cb-utrata"><input type="checkbox" onchange="toggleCB(this, 'cb-utrata')"> Niezamierzona utrata masy ciała</label>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Duszność wysiłkowa mMRC</label>
+            <select id="mmrc" onchange="updateProgress()">
+              <option value="">— wybierz —</option>
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="1/2">1/2</option>
+              <option value="2">2</option>
+              <option value="2/3">2/3</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Utrata masy ciała (kg / miesiące)</label>
+            <input type="text" id="utrataMasy" placeholder="np. 40 kg w 6 miesięcy, 2 lata temu" oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Wyniki osłuchiwania płuc</label>
+          <input type="text" id="osłuch" placeholder="np. rozlane, ciche świsty/gwizdy" oninput="updateProgress()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. BADANIA LABORATORYJNE -->
+    <div class="section" id="s-badania">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <span class="section-title">Badania laboratoryjne</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row-3">
+          <div class="field">
+            <label>RF (IU/ml)</label>
+            <input type="text" id="rf" placeholder="np. 229" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>OB (mm/h)</label>
+            <input type="text" id="ob" placeholder="np. 100" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>GFR</label>
+            <input type="text" id="gfr" placeholder="np. 55" oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>CRP (mg/l)</label>
+            <input type="text" id="crp" placeholder="np. 14,5" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>AST (U/l)</label>
+            <input type="text" id="ast" placeholder="np. 53" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>GGTP (U/l)</label>
+            <input type="text" id="ggtp" placeholder="np. 87" oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Wynik ogólny moczu</label>
+          <input type="text" id="mocz" placeholder="np. erytrocyturia, bakteriuria, leukocyturia" oninput="updateProgress()">
+        </div>
+        <div class="field">
+          <label>Posiew moczu</label>
+          <input type="text" id="posiewMocz" placeholder="np. Streptococcus gallolyticus — uznano za zanieczyszczenie" oninput="updateProgress()">
+        </div>
+        <div class="field">
+          <label>Badania oczekujące na wyniki</label>
+          <input type="text" id="badaniaOczek" placeholder="np. ANA-Hep-2, profil ANCA, posiew nieswoisty BAL, badanie BK, cytologia BAL" oninput="updateProgress()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. BADANIA CZYNNOŚCIOWE -->
+    <div class="section" id="s-czynnosciowe">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <span class="section-title">Badania czynnościowe płuc</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row-3">
+          <div class="field">
+            <label>FEV1 (L / % / SR)</label>
+            <input type="text" id="fev1" placeholder="np. 1,23L, 69%, SR -1,74" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>FVC (L / % / SR)</label>
+            <input type="text" id="fvc" placeholder="np. 2,31L, 98%, SR -0,09" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>FEV1/FVC (% / SR)</label>
+            <input type="text" id="fevfvc" placeholder="np. 53,47%, SR -2,56" oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Opis spirometrii</label>
+          <input type="text" id="spirOpisTyp" placeholder="np. umiarkowana obturacja" oninput="updateProgress()">
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>TLC (L / % / SR)</label>
+            <input type="text" id="tlc" placeholder="np. 5,80L, 129%, SR 2,15" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>RV (L / %)</label>
+            <input type="text" id="rv" placeholder="np. 3,42L, 165%" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>DLCO SB (% / SR)</label>
+            <input type="text" id="dlco" placeholder="np. 60%, SR -2,12" oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Opis DLCO</label>
+          <input type="text" id="dlcoOpis" placeholder="np. obniżenie zdolności dyfuzyjnej w stopniu łagodnym" oninput="updateProgress()">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Wynik 6MWT (metry)</label>
+            <input type="text" id="sixmwt" placeholder="np. 210" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>Saturacja w 6MWT</label>
+            <input type="text" id="sat6mwt" placeholder="np. bez istotnego spadku saturacji" oninput="updateProgress()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. BADANIA OBRAZOWE -->
+    <div class="section" id="s-obrazowe">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <span class="section-title">Badania obrazowe</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Opis TKHR klatki piersiowej (wdech/wydech)</label>
+          <textarea id="tkhr" rows="4" placeholder='np. "Nieco mozaikowa atenuacja płuca prawego w szczycie, bez pułapki powietrznej na wydechu..."' oninput="updateProgress()"></textarea>
+        </div>
+        <div class="field">
+          <label>Opis ECHO serca i USG jamy brzusznej</label>
+          <select id="echoUsg" onchange="updateProgress()">
+            <option value="w załączeniu">Opisy w załączeniu</option>
+            <option value="bez istotnych odchyleń">Bez istotnych odchyleń</option>
+            <option value="">Wpisz ręcznie poniżej</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Dodatkowe uwagi do badań obrazowych</label>
+          <textarea id="obrazoweUwagi" rows="2" placeholder="Opcjonalnie..." oninput="updateProgress()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. PROCEDURY -->
+    <div class="section" id="s-procedury">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <span class="section-title">Procedury diagnostyczne</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Limfocyty w BAL (%)</label>
+            <input type="text" id="balLimf" placeholder="np. 0" oninput="updateProgress()">
+          </div>
+          <div class="field">
+            <label>Neutrofile w BAL (%)</label>
+            <input type="text" id="balNeut" placeholder="np. 4" oninput="updateProgress()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Konsultacje specjalistyczne</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item" id="cb-reuma"><input type="checkbox" onchange="toggleCB(this,'cb-reuma')"> Reumatologiczna</label>
+            <label class="checkbox-item" id="cb-kardio"><input type="checkbox" onchange="toggleCB(this,'cb-kardio')"> Kardiologiczna</label>
+            <label class="checkbox-item" id="cb-gastro"><input type="checkbox" onchange="toggleCB(this,'cb-gastro')"> Gastroenterologiczna</label>
+            <label class="checkbox-item" id="cb-nefro"><input type="checkbox" onchange="toggleCB(this,'cb-nefro')"> Nefrologiczna</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Planowane konsylium</label>
+          <input type="text" id="konsylium" placeholder="np. radiologiczno-pulmonologiczne" oninput="updateProgress()">
+        </div>
+        <div class="field">
+          <label>Uwagi dot. bronchofiberoskopii i BAL</label>
+          <textarea id="balUwagi" rows="2" placeholder="np. pozostałe badania z BAL w opracowaniu" oninput="updateProgress()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. ZALECENIA -->
+    <div class="section" id="s-zalecenia">
+      <div class="section-header">
+        <span class="section-num">07</span>
+        <span class="section-title">Zalecenia przy wypisie</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Stan ogólny przy wypisie</label>
+          <select id="stanWypis" onchange="updateProgress()">
+            <option value="">— wybierz —</option>
+            <option value="bardzo dobrym">Bardzo dobry</option>
+            <option value="dobrym">Dobry</option>
+            <option value="dość dobrym">Dość dobry</option>
+            <option value="średnim">Średni</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Zalecenia przy wypisie</label>
+          <textarea id="zalecenia" rows="6" placeholder="np.&#10;1. Kontrola w Poradni Pneumonologicznej za 4 tygodnie&#10;2. Kontrolne badanie spirometryczne za 3 miesiące&#10;3. Dalsze oczekiwanie na wyniki..." oninput="updateProgress()"></textarea>
+        </div>
+        <div class="field">
+          <label>Leki przy wypisie</label>
+          <textarea id="leki" rows="3" placeholder="np. kontynuować dotychczasowe leczenie" oninput="updateProgress()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PODGLĄD EPIKRYZY -->
+    <div class="preview-section" id="preview-section">
+      <div class="preview-header">
+        <div class="preview-title">⬡ Wygenerowana epikryza</div>
+        <div class="preview-actions">
+          <button class="btn btn-secondary" onclick="generateEpikryza()">Odśwież</button>
+          <button class="btn btn-primary" onclick="copyText()">Kopiuj</button>
+        </div>
+      </div>
+      <div class="preview-body" id="previewBody">
+        <span style="color:#6b6560; font-style:italic;">Wypełnij formularz i kliknij "Generuj epikryzę" aby zobaczyć wynik...</span>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<script>
+function scrollTo(id) {
+  document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'});
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+function toggleCB(el, id) {
+  document.getElementById(id).classList.toggle('checked', el.checked);
+  updateProgress();
+}
+
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function updateProgress() {
+  const fields = ['wiek','plec','tryb','cel','dataTK','opisTK','stanOgolny','alergeny','mmrc',
+    'osłuch','rf','ob','gfr','crp','ast','ggtp','mocz','fev1','fvc','fevfvc','tlc','rv','dlco',
+    'tkhr','balLimf','balNeut','stanWypis','zalecenia'];
+  const filled = fields.filter(f => val(f)).length;
+  const pct = Math.round(filled/fields.length*100);
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressPct').textContent = pct+'%';
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '[DATA]';
+  const d = new Date(dateStr);
+  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+}
+
+function getObjawy() {
+  const map = {
+    'cb-dusznosc': `duszność wysiłkową mMRC ${val('mmrc')}`,
+    'cb-kaszel': 'kaszel produktywny z odkrztuszaniem białawej plwociny',
+    'cb-bole': 'bóle stawowe',
+    'cb-suche': 'suchość oczu',
+    'cb-zawroty': 'zawroty głowy',
+    'cb-utrata': `niezamierzoną utratę masy ciała (${val('utrataMasy')})`
+  };
+  return Object.entries(map)
+    .filter(([id]) => document.querySelector(`#${id} input`)?.checked)
+    .map(([,v]) => v);
+}
+
+function getKonsultacje() {
+  const map = {
+    'cb-reuma': 'reumatologicznie',
+    'cb-kardio': 'kardiologicznie',
+    'cb-gastro': 'gastroenterologicznie',
+    'cb-nefro': 'nefrologicznie'
+  };
+  return Object.entries(map)
+    .filter(([id]) => document.querySelector(`#${id} input`)?.checked)
+    .map(([,v]) => v);
+}
+
+function p(v, fallback='[UZUPEŁNIJ]') {
+  return v || `<span class="placeholder">${fallback}</span>`;
+}
+
+function generateEpikryza() {
+  const plec = val('plec') || 'Pacjent(ka)';
+  const plecOdmiana = plec === 'Pacjentka' ? 'Pacjentka' : 'Pacjent';
+  const przyjety = plec === 'Pacjentka' ? 'przyjęta' : 'przyjęty';
+  const wypisany = plec === 'Pacjentka' ? 'wypisana' : 'wypisany';
+  const pozostawala = plec === 'Pacjentka' ? 'pozostawała' : 'pozostawał';
+  const podawala = plec === 'Pacjentka' ? 'podawała' : 'podawał';
+  const zgłaszała = plec === 'Pacjentka' ? 'zgłaszała' : 'zgłaszał';
+  const przeszla = plec === 'Pacjentka' ? 'przeszła' : 'przeszedł';
+  const zostanie = 'zostanie';
+
+  const objawy = getObjawy();
+  const konsult = getKonsultacje();
+
+  const opisTK = val('opisTK');
+  const tkhr = val('tkhr');
+  const echoUsg = val('echoUsg');
+
+  let tekst = `${plecOdmiana} ${val('wiek') || '[WIEK]'}-letni${plec === 'Pacjentka' ? 'a' : ''} ${przyjety} do Kliniki w trybie ${val('tryb') || '[TRYB]'} w celu ${val('cel') || '[CEL PRZYJĘCIA]'}.
+
+Zmiany śródmiąższowe płuc wykryto po raz pierwszy w badaniu TK klatki piersiowej z kontrastem z dnia ${formatDate(val('dataTK'))} - "${opisTK || '[OPIS TK]'}".
+
+${plecOdmiana} ${pozostawala} pod opieką ${val('poradnia') || '[NAZWA PORADNI]'}.
+
+Przy przyjęciu do Kliniki ${plecOdmiana} była w stanie ogólnym ${val('stanOgolny') || '[STAN OGÓLNY]'}, wydolna krążeniowo i oddechowo, w pełnym kontakcie słowno-logicznym. W wywiadzie ${podawala} liczne narażenia na alergeny w miejscu zamieszkania - ${val('alergeny') || '[NARAŻENIA]'}.`;
+
+  if (objawy.length > 0) {
+    tekst += ` Ponadto z objawów ${zgłaszała} ${objawy.join(', ')}.`;
+  }
+
+  const osłuch = val('osłuch');
+  if (osłuch) {
+    tekst += ` W badaniu fizykalnym stwierdzono m.in. osłuchowo nad płucami ${osłuch}.`;
+  }
+
+  const rf=val('rf'), ob=val('ob'), gfr=val('gfr'), crp=val('crp'), ast=val('ast'), ggtp=val('ggtp');
+  let lab = 'W badaniach laboratoryjnych stwierdzono';
+  const labItems = [];
+  if (rf) labItems.push(`zwiększone stężenie RF (${rf} IU/ml)`);
+  if (ob) labItems.push(`przyśpieszone OB (${ob} mm/h)`);
+  if (gfr) labItems.push(`cechy przewlekłej choroby nerek (GFR ${gfr})`);
+  if (crp) labItems.push(`podwyższone CRP ${crp} mg/l`);
+  if (ast || ggtp) labItems.push(`podwyższone enzymy wątrobowe${ast?` - AST ${ast} U/l`:''}${ggtp?`, GGTP ${ggtp} U/l`:''}`);
+  tekst += labItems.length ? `\n\n${lab}: ${labItems.join(', ')}.` : '';
+
+  const mocz = val('mocz');
+  const posiew = val('posiewMocz');
+  if (mocz) tekst += ` W badaniu ogólnym moczu stwierdzono ${mocz}.`;
+  if (posiew) tekst += ` W posiewie moczu: ${posiew}.`;
+
+  const fev1=val('fev1'), fvc=val('fvc'), fevfvc=val('fevfvc'), spirOpis=val('spirOpisTyp');
+  const tlc=val('tlc'), rv=val('rv'), dlco=val('dlco'), dlcoOpis=val('dlcoOpis');
+  const sixmwt=val('sixmwt'), sat=val('sat6mwt');
+
+  if (fev1||fvc||fevfvc||spirOpis||tlc||rv||dlco) {
+    tekst += `\n\nWykonano badania czynnościowe płuc.`;
+    if (spirOpis||fev1||fvc||fevfvc) {
+      tekst += ` W badaniu spirometrycznym ${spirOpis||''}`;
+      if (fev1) tekst += `, FEV1 - ${fev1}`;
+      if (fvc) tekst += `; FVC ${fvc}`;
+      if (fevfvc) tekst += `; FEV1/FVC ${fevfvc}`;
+      tekst += '.';
+    }
+    if (tlc||rv) {
+      tekst += ` W badaniu pletyzmograficznym cechy hiperinflacji`;
+      if (tlc) tekst += `, TLC ${tlc}`;
+      if (rv) tekst += `; RV ${rv}`;
+      tekst += '.';
+    }
+    if (dlco||dlcoOpis) {
+      tekst += ` ${dlcoOpis ? `Obecne ${dlcoOpis}` : 'Stwierdzono zmianę zdolności dyfuzyjnej'}`;
+      if (dlco) tekst += ` dla tlenku węgla, DLCO SB ${dlco}`;
+      tekst += '.';
+    }
+    if (sixmwt) tekst += ` W 6MWT ${plecOdmiana === 'Pacjentka' ? 'pacjentka' : 'pacjent'} ${przeszla} ${sixmwt} metrów${sat ? `, ${sat}` : ''}.`;
+  }
+
+  if (tkhr) {
+    tekst += `\n\nWykonano TKHR klatki piersiowej (na wdechu i wydechu) gdzie stwierdzono m.in. "${tkhr}".`;
+  }
+
+  const badaniaOczek = val('badaniaOczek');
+  if (badaniaOczek) {
+    tekst += `\n\nPobrano krew na badania: ${badaniaOczek} - badania pozostają w toku.`;
+  }
+
+  if (echoUsg) {
+    tekst += ` Wykonano także ECHO serca oraz USG jamy brzusznej - opisy ${echoUsg}.`;
+  }
+
+  const obrazoweUwagi = val('obrazoweUwagi');
+  if (obrazoweUwagi) tekst += ` ${obrazoweUwagi}`;
+
+  if (konsult.length > 0) {
+    tekst += `\n\nPacjent${plec==='Pacjentka'?'kę':'a'} konsultowano ${konsult.join(', ')} - opisy w załączeniu.`;
+  }
+
+  const balLimf = val('balLimf'), balNeut = val('balNeut');
+  const balUwagi = val('balUwagi');
+  if (balLimf||balNeut||balUwagi) {
+    tekst += `\n\nWykonano bronchofiberoskopię z płukaniem oskrzelowo-pęcherzykowym.`;
+    if (balLimf||balNeut) tekst += ` W materiale z BAL limfocyty stanowiły ${balLimf||'[%]'}%, neutrofile ${balNeut||'[%]'}% uzyskanych komórek.`;
+    if (balUwagi) tekst += ` ${balUwagi}`;
+  }
+
+  const konsylium = val('konsylium');
+  if (konsylium) {
+    tekst += `\n\nPacjent${plec==='Pacjentka'?'ka':'} ${zostanie} omówion${plec==='Pacjentka'?'a':''} na najbliższym konsylium ${konsylium}.`;
+  }
+
+  const stanWypis = val('stanWypis');
+  const zalecenia = val('zalecenia');
+  const leki = val('leki');
+
+  tekst += `\n\nW oczekiwaniu na wyniki pobranych badań i dalsze decyzje ${plec==='Pacjentka'?'Pacjentk':'Pacjent'}${plec==='Pacjentka'?'ę':'a'} w stanie ogólnym ${stanWypis||'[STAN]'} ${wypisany} do domu z zaleceniami:`;
+  if (zalecenia) tekst += `\n${zalecenia}`;
+  if (leki) tekst += `\n\nLeki:\n${leki}`;
+
+  document.getElementById('previewBody').innerHTML = tekst;
+  document.getElementById('preview-section').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function copyText() {
+  const text = document.getElementById('previewBody').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.currentTarget;
+    btn.textContent = '✓ Skopiowano!';
+    setTimeout(() => btn.textContent = 'Kopiuj', 2000);
+  });
+}
+
+function printDoc() {
+  generateEpikryza();
+  setTimeout(() => window.print(), 300);
+}
+
+function resetForm() {
+  if (!confirm('Czy na pewno chcesz wyczyścić cały formularz?')) return;
+  document.querySelectorAll('input[type=text], input[type=number], input[type=date], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  document.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = false);
+  document.querySelectorAll('.checkbox-item').forEach(el => el.classList.remove('checked'));
+  document.getElementById('previewBody').innerHTML = '<span style="color:#6b6560; font-style:italic;">Wypełnij formularz i kliknij "Generuj epikryzę" aby zobaczyć wynik...</span>';
+  updateProgress();
+}
+
+// auto-update progress on load
+updateProgress();
+</script>
+</body>
+</html>
